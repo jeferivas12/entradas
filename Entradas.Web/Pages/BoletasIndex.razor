@@ -53,7 +53,8 @@
         await getBoletaAsync();
         if(boleta is null)
         {
-            return;
+            navigationManager.NavigateTo("/boletas");
+            
         }
         else if (boleta!.Usada)
         {
@@ -71,6 +72,7 @@
         var responseHttp = await repository.Get<Boleta>($"/api/boletas/{ID}");
         if (responseHttp.Error)
         {
+            boleta = null;
             if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
             {
                 await sweetAlertService.FireAsync("Lo siento", "Esta no es una boleta válida", SweetAlertIcon.Info);
@@ -82,7 +84,7 @@
             return;
         }
 
-        
+        boleta = responseHttp.Response;
 
     }
 
