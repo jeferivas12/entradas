@@ -16,8 +16,6 @@ namespace Entradas.API.Controllers
             _context = context;
         }
 
-       
-
         [HttpGet("{id:int}")]
         public async Task<ActionResult> Get(int id)
         {
@@ -26,21 +24,15 @@ namespace Entradas.API.Controllers
             {
                 return NotFound();
             }
-
             return Ok(boleta);
         }
-
-
-        
 
         [HttpPut]
         public async Task<ActionResult> PutAsync(Boleta boleta)
         {
-            
-                _context.Update(boleta);
-                await _context.SaveChangesAsync();
-                return Ok(boleta);
-            
+            _context.Update(boleta);
+            await _context.SaveChangesAsync();
+            return Ok(boleta);
         }
     }
 }

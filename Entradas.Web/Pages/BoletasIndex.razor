@@ -6,62 +6,63 @@
 @inject SweetAlertService sweetAlertService
 
 
-<h3>Boletas</h3>
+<h3>Registro de boletas</h3>
 
 <div class="card">
-<div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="mb-6">
-                            <label>ID de Boleta:</label>
-                            <div>
-                                <input @bind="ID" placeholder="boleta" />
-                            </div>
-                        </div>
-                        </div>
-                <div class="col-6">
-                        <div class="mb-6">
-                            <label>Portería:</label>
-                            <div>
-                            <select @bind="Porteria">
-                                    <option value="0">-- Seleccione una portería --</option>
-                                    <option value="Norte">- Norte --</option>
-                                    <option value="Sur">-- Sur --</option>
-                                    <option value="Oriente">-- Oriente --</option>
-                                    <option value="Occidente">-- Occidente --</option>
-                                </select>
-                            </div>
-                        </div>
-                        
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6">
+                <div class="mb-6">
+                    <label> ID de Boleta:</label>
+                    <div>
+                        <input class="form-control" @bind="ID" placeholder="boleta" />
                     </div>
                 </div>
             </div>
+            <div class="col-6">
+                <div class="mb-6">
+                    <label> Portería:</label>
+                    <div>
+                        <select class="form-select" @bind="Porteria">
+                            <option value="Norte">-- Norte --</option>
+                            <option value="Sur">-- Sur --</option>
+                            <option value="Oriente">-- Oriente --</option>
+                            <option value="Occidente">-- Occidente --</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
     <div class="card-footer">
-            <button class="border-primary" type="button" onclick="@SaveBoletaAsync"> Registrar </button>
-        </div>
-        </div>
-        
+        <button class="btn btn-sm btn-primary float-end" type="button" onclick="@SaveBoletaAsync"><i class="oi oi-check" /> Registrar </button>
+    </div>
+</div>
+
 
 
 
 @code {
-    private Boleta? boleta ;
+    private Boleta? boleta;
     private int ID { get; set; }
     private string? Porteria { get; set; }
 
     private async Task SaveBoletaAsync()
     {
-        await inicial();
+        await getBoletaAsync();
         if (boleta!.Usada)
-        { await sweetAlertService.FireAsync("Fraude", "Esta boleta ya fue redimida el " + boleta.Date + " en la portería " + boleta.Porteria, SweetAlertIcon.Error); }
+        {
+            await sweetAlertService.FireAsync("Fraude", "Esta boleta ya fue redimida el " + boleta.Date + " en la portería " + boleta.Porteria, SweetAlertIcon.Error);
+        }
         else
-        { 
-            await final();
-            await sweetAlertService.FireAsync("Gut", "Registro exitoso", SweetAlertIcon.Success);
+        {
+            await putBoletaAsync();
         }
 
     }
-    private async Task inicial()
+
+    private async Task getBoletaAsync()
     {
         var responseHttp = await repository.Get<Boleta>($"/api/boletas/{ID}");
         if (responseHttp.Error)
@@ -79,22 +80,24 @@
 
         boleta = responseHttp.Response;
     }
-    private async Task final()
+
+    private async Task putBoletaAsync()
     {
-        boleta!.Porteria = "Sur";
+        boleta!.Porteria = Porteria;
         boleta!.Date = DateTime.Now;
         boleta!.Usada = true;
         Console.WriteLine(boleta);
-        var responseHttp2 = await repository.Put("/api/boletas", boleta!);
-        if (responseHttp2.Error)
+        var responseHttp = await repository.Put("/api/boletas", boleta!);
+        if (responseHttp.Error)
         {
-            var message = await responseHttp2.GetErrorMessageAsync();
+            var message = await responseHttp.GetErrorMessageAsync();
             await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
+        await sweetAlertService.FireAsync("Gut", "Registro exitoso", SweetAlertIcon.Success);
         navigationManager.NavigateTo("/boletas");
-       
+
     }
-    
+
 }
