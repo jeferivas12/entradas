@@ -16,18 +16,31 @@ namespace Entradas.API.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<ActionResult> Get()
+       
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult> Get(int id)
         {
-            return Ok(await _context.Boletas.ToListAsync());
+            var boleta = await _context.Boletas.FirstOrDefaultAsync(x => x.Id == id);
+            if (boleta is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(boleta);
         }
 
-        [HttpPost]
-        public async Task<ActionResult> Post(Boleta boleta)
+
+        
+
+        [HttpPut]
+        public async Task<ActionResult> PutAsync(Boleta boleta)
         {
-            _context.Add(boleta);
-            await _context.SaveChangesAsync();
-            return Ok(boleta);
+            
+                _context.Update(boleta);
+                await _context.SaveChangesAsync();
+                return Ok(boleta);
+            
         }
     }
 }

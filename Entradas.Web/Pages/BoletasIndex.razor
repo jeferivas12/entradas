@@ -1,0 +1,100 @@
+﻿@page "/boletas"
+
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+
+
+<h3>Boletas</h3>
+
+<div class="card">
+<div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-6">
+                            <label>ID de Boleta:</label>
+                            <div>
+                                <input @bind="ID" placeholder="boleta" />
+                            </div>
+                        </div>
+                        </div>
+                <div class="col-6">
+                        <div class="mb-6">
+                            <label>Portería:</label>
+                            <div>
+                            <select @bind="Porteria">
+                                    <option value="0">-- Seleccione una portería --</option>
+                                    <option value="Norte">- Norte --</option>
+                                    <option value="Sur">-- Sur --</option>
+                                    <option value="Oriente">-- Oriente --</option>
+                                    <option value="Occidente">-- Occidente --</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+    <div class="card-footer">
+            <button class="border-primary" type="button" onclick="@SaveBoletaAsync"> Registrar </button>
+        </div>
+        </div>
+        
+
+
+
+@code {
+    private Boleta? boleta ;
+    private int ID { get; set; }
+    private string? Porteria { get; set; }
+
+    private async Task SaveBoletaAsync()
+    {
+        await inicial();
+        if (boleta!.Usada)
+        { await sweetAlertService.FireAsync("Fraude", "Esta boleta ya fue redimida el " + boleta.Date + " en la portería " + boleta.Porteria, SweetAlertIcon.Error); }
+        else
+        { 
+            await final();
+            await sweetAlertService.FireAsync("Gut", "Registro exitoso", SweetAlertIcon.Success);
+        }
+
+    }
+    private async Task inicial()
+    {
+        var responseHttp = await repository.Get<Boleta>($"/api/boletas/{ID}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                await sweetAlertService.FireAsync("Lo siento", "Esta no es una boleta válida", SweetAlertIcon.Info);
+                return;
+            }
+
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        boleta = responseHttp.Response;
+    }
+    private async Task final()
+    {
+        boleta!.Porteria = "Sur";
+        boleta!.Date = DateTime.Now;
+        boleta!.Usada = true;
+        Console.WriteLine(boleta);
+        var responseHttp2 = await repository.Put("/api/boletas", boleta!);
+        if (responseHttp2.Error)
+        {
+            var message = await responseHttp2.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        navigationManager.NavigateTo("/boletas");
+       
+    }
+    
+}
