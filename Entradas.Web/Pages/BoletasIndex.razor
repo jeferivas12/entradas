@@ -51,7 +51,11 @@
     private async Task SaveBoletaAsync()
     {
         await getBoletaAsync();
-        if (boleta!.Usada)
+        if(boleta is null)
+        {
+            return;
+        }
+        else if (boleta!.Usada)
         {
             await sweetAlertService.FireAsync("Fraude", "Esta boleta ya fue redimida el " + boleta.Date + " en la portería " + boleta.Porteria, SweetAlertIcon.Error);
         }
@@ -78,7 +82,8 @@
             return;
         }
 
-        boleta = responseHttp.Response;
+        
+
     }
 
     private async Task putBoletaAsync()
@@ -86,7 +91,6 @@
         boleta!.Porteria = Porteria;
         boleta!.Date = DateTime.Now;
         boleta!.Usada = true;
-        Console.WriteLine(boleta);
         var responseHttp = await repository.Put("/api/boletas", boleta!);
         if (responseHttp.Error)
         {
